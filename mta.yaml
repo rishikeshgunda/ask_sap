@@ -1,0 +1,149 @@
+_schema-version: 3.3.0
+ID: ask-sap-poc
+version: 1.0.0
+description: "Ask SAP POC: UI5 chat, CAP, MCP server, BTP iFlow, S/4 OData"
+parameters:
+  enable-parallel-deployments: true
+  deploy_mode: html5-repo
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - cds build --production
+
+modules:
+  # ---- CAP service (also starts the MCP server as a child process) ----
+  - name: ask-sap-poc-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+      memory: 512M
+      disk-quota: 1G
+    build-parameters:
+      builder: npm-ci
+    provides:
+      - name: srv-api # required by consumers of CAP services (e.g. the managed approuter)
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: ask-sap-poc-auth
+      - name: ask-sap-poc-destination
+      - name: ask-sap-config # user-provided service with the iFlow and Groq credentials
+
+  # ---- Deploys the UI5 zip to the HTML5 Application Repository + creates the srv-api destination ----
+  - name: ask-sap-poc-app-deployer
+    type: com.sap.application.content
+    path: gen
+    build-parameters:
+      build-result: app/
+      requires:
+        - name: asksappocasksap
+          artifacts:
+            - asksap.zip
+          target-path: app/
+    requires:
+      - name: ask-sap-poc-auth
+      - name: srv-api
+      - name: ask-sap-poc-html5-repo-host
+        parameters:
+          content-target: true
+          config:
+            HTML5Runtime_enabled: true
+    parameters:
+      config:
+        destinations:
+          - Name: srv-api
+            URL: ~{srv-api/srv-url}
+            Authentication: NoAuthentication
+            Type: HTTP
+            ProxyType: Internet
+            HTML5.ForwardAuthToken: true
+            HTML5.DynamicDestination: true
+
+  # ---- The UI5 app (builds dist/asksap.zip) ----
+  - name: asksappocasksap
+    type: html5
+    path: app/asksap
+    build-parameters:
+      build-result: dist
+      builder: custom
+      commands:
+        - npm ci
+        - npm run build
+      supported-platforms:
+        []
+
+  # ---- Destinations that let SAP Build Work Zone find the HTML5 app and the XSUAA instance ----
+  - name: ask-sap-poc-destinations
+    type: com.sap.application.content
+    requires:
+      - name: ask-sap-poc-auth
+        parameters:
+          service-key:
+            name: ask-sap-poc-auth-key
+      - name: ask-sap-poc-html5-repo-host
+        parameters:
+          service-key:
+            name: ask-sap-poc-html5-repo-host-key
+      - name: srv-api
+      - name: ask-sap-poc-destination
+        parameters:
+          content-target: true
+    build-parameters:
+      no-source: true
+    parameters:
+      content:
+        instance:
+          existing_destinations_policy: update
+          destinations:
+            - Name: ask-sap-poc-html5-repository
+              ServiceInstanceName: ask-sap-poc-html5-repo-host
+              ServiceKeyName: ask-sap-poc-html5-repo-host-key
+              sap.cloud.service: asksappoc.service
+            - Name: ask-sap-poc-auth
+              Authentication: OAuth2UserTokenExchange
+              ServiceInstanceName: ask-sap-poc-auth
+              ServiceKeyName: ask-sap-poc-auth-key
+              sap.cloud.service: asksappoc.service
+
+resources:
+  # ---- Authentication and authorization (scope, role template, role collection AskSap_User) ----
+  - name: ask-sap-poc-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: ask-sap-poc-${org}-${space}
+        tenant-mode: dedicated
+        oauth2-configuration:
+          credential-types:
+            - "binding-secret"
+            - "x509"
+          redirect-uris:
+            - https://*.cfapps.us10.hana.ondemand.com/**
+            - https://*.launchpad.cfapps.us10.hana.ondemand.com/**
+
+  - name: ask-sap-poc-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+    requires:
+      - name: srv-api
+
+  - name: ask-sap-poc-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  # ---- Created by you BEFORE the first deploy (see DEPLOYMENT.md, step 3) ----
+  - name: ask-sap-config
+    type: org.cloudfoundry.existing-service
+    parameters:
+      service-name: ask-sap-config

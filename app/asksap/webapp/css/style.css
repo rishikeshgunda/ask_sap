@@ -1,0 +1,58 @@
+/* Page background */
+.askSapPage > section,
+.askSapPage .sapMPageEnableScrolling { background: var(--sapBackgroundColor); }
+
+/* List: no list chrome, bubbles only */
+.askSapList { padding: 1rem 1rem 0.5rem; background: transparent; }
+.askSapList .sapMLIB,
+.askSapList .sapMLIB:hover,
+.askSapList .sapMLIB:focus {
+  background: transparent !important;
+  border: none !important;
+  outline: none !important;
+  padding: 0;
+}
+.askSapList .sapMLIB::before, .askSapList .sapMLIB::after { display: none !important; }
+.askSapList .sapMLIBContent { padding: 0.3rem 0; }
+
+/* Bubbles. data-role is written by the view (CustomData with writeToDom) */
+.askSapBubble {
+  display: block;
+  width: fit-content;
+  max-width: 78%;
+  box-sizing: border-box;
+  padding: 0.7rem 1rem;
+  border-radius: 1rem;
+}
+.askSapBubble[data-role="user"] {
+  margin-left: auto;
+  background: var(--sapButton_Emphasized_Background);
+  border-bottom-right-radius: 0.25rem;
+}
+.askSapBubble[data-role="user"] .sapMText { color: var(--sapButton_Emphasized_TextColor); }
+.askSapBubble[data-role="assistant"] {
+  margin-right: auto;
+  background: var(--sapTile_Background);
+  border: 1px solid var(--sapTile_BorderColor);
+  border-bottom-left-radius: 0.25rem;
+  box-shadow: var(--sapContent_Shadow0);
+}
+
+/* Formatted answer text */
+.askSapBubble .sapMFT p { margin: 0 0 0.4rem; }
+.askSapBubble .sapMFT p:last-child { margin-bottom: 0; }
+.askSapBubble .sapMFT ul { margin: 0.2rem 0 0.4rem; padding-left: 1.2rem; }
+.askSapBubble .sapMFT li { margin: 0.15rem 0; }
+
+/* Collapsible "SAP calls" panel */
+.askSapCalls { margin-top: 0.6rem; background: transparent !important; border: none !important; }
+.askSapCalls .sapMPanelHdr,
+.askSapCalls .sapMPanelWrappingDivTb { height: 1.75rem; font-size: 0.8rem; background: transparent; }
+.askSapCalls .sapMPanelContent { padding: 0.25rem 0.5rem; background: transparent; border: none; }
+.askSapCalls .sapMText {
+  font-family: monospace;
+  font-size: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--sapContent_LabelColor);
+}

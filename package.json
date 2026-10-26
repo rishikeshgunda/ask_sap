@@ -1,0 +1,38 @@
+{
+  "name": "ask-sap-poc",
+  "version": "1.0.0",
+  "description": "Ask SAP POC: UI5 chat -> CAP -> MCP server -> BTP iFlow -> S/4 OData",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@sap/cds": "^9",
+    "@sap/xssec": "^4",
+    "express": "^4",
+    "fast-xml-parser": "^4.4.0",
+    "zod": "^3.25.0"
+  },
+  "scripts": {
+    "start": "cds-serve",
+    "dev": "cds watch",
+    "inspect": "npx @modelcontextprotocol/inspector node srv/mcp/server.mjs",
+    "build:mta": "mbt build -t ./mta_archives",
+    "deploy": "cf deploy mta_archives/ask-sap-poc_1.0.0.mtar"
+  },
+  "cds": {
+    "requires": {
+      "[development]": {
+        "auth": "dummy"
+      },
+      "[production]": {
+        "auth": "xsuaa"
+      },
+      "destinations": true,
+      "html5-repo": true,
+      "workzone": true
+    }
+  }
+}

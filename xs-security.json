@@ -1,0 +1,37 @@
+{
+  "xsappname": "ask-sap-poc",
+  "tenant-mode": "dedicated",
+  "description": "Security descriptor of the Ask SAP POC",
+  "scopes": [
+    {
+      "name": "$XSAPPNAME.AskSapUser",
+      "description": "Use the Ask SAP chat"
+    }
+  ],
+  "attributes": [],
+  "role-templates": [
+    {
+      "name": "AskSapUser",
+      "description": "Use the Ask SAP chat",
+      "scope-references": [
+        "$XSAPPNAME.AskSapUser"
+      ],
+      "attribute-references": []
+    }
+  ],
+  "role-collections": [
+    {
+      "name": "AskSap_User",
+      "description": "Ask SAP: users who may use the chat",
+      "role-template-references": [
+        "$XSAPPNAME.AskSapUser"
+      ]
+    }
+  ],
+  "oauth2-configuration": {
+    "redirect-uris": [
+      "https://*.cfapps.us10.hana.ondemand.com/**",
+      "https://*.launchpad.cfapps.us10.hana.ondemand.com/**"
+    ]
+  }
+}

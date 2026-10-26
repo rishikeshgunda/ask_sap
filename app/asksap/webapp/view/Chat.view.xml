@@ -1,0 +1,49 @@
+<mvc:View
+  controllerName="com.intraedge.asksap.controller.Chat"
+  xmlns:mvc="sap.ui.core.mvc"
+  xmlns="sap.m"
+  xmlns:core="sap.ui.core"
+  displayBlock="true"
+  height="100%">
+  <App id="app">
+    <pages>
+      <Page title="{i18n>title}" enableScrolling="false" class="askSapPage">
+        <headerContent>
+          <Button icon="sap-icon://delete" tooltip="{i18n>clear}" press=".onClear" enabled="{= !${chat>/busy} }"/>
+        </headerContent>
+        <content>
+          <ScrollContainer id="scroll" vertical="true" horizontal="false" height="100%" width="100%">
+            <List id="msgList" items="{chat>/messages}" showSeparators="None" noDataText="{i18n>empty}"
+                  class="askSapList" growing="false">
+              <CustomListItem>
+                <VBox class="askSapBubble">
+                  <!-- writeToDom puts data-role="user|assistant" on the element, which the CSS uses -->
+                  <customData>
+                    <core:CustomData key="role" value="{chat>role}" writeToDom="true"/>
+                  </customData>
+                  <Text text="{chat>text}" visible="{= ${chat>role} === 'user' }"/>
+                  <FormattedText htmlText="{chat>html}" visible="{= ${chat>role} !== 'user' }"/>
+                  <Panel headerText="{i18n>sapCalls}" expandable="true" expanded="false"
+                         backgroundDesign="Transparent" class="askSapCalls"
+                         visible="{= !!${chat>calls} }">
+                    <Text text="{chat>calls}"/>
+                  </Panel>
+                </VBox>
+              </CustomListItem>
+            </List>
+          </ScrollContainer>
+        </content>
+        <footer>
+          <Toolbar>
+            <Input id="input" value="{chat>/draft}" placeholder="{i18n>placeholder}"
+                   submit=".onSend" enabled="{= !${chat>/busy} }">
+              <layoutData><FlexItemData growFactor="1"/></layoutData>
+            </Input>
+            <Button text="{i18n>send}" icon="sap-icon://paper-plane" type="Emphasized"
+                    press=".onSend" enabled="{= !${chat>/busy} }"/>
+          </Toolbar>
+        </footer>
+      </Page>
+    </pages>
+  </App>
+</mvc:View>

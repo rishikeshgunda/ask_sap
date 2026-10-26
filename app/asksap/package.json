@@ -1,0 +1,13 @@
+{
+  "name": "asksap",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Ask SAP chat UI (UI5 freestyle)",
+  "scripts": {
+    "build": "ui5 build --config ui5.yaml --clean-dest --dest dist --include-task=generateCachebusterInfo"
+  },
+  "devDependencies": {
+    "@ui5/cli": "^4",
+    "ui5-task-zipper": "^3"
+  }
+}
