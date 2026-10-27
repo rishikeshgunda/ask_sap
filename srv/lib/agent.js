@@ -6,15 +6,12 @@ const MAX_STEPS = 5
 const MAX_TOOL_CHARS = 3500   // Groq's free tier allows few tokens per minute, so keep tool results small
 const MAX_HISTORY = 4
 
-const SYSTEM = `You are Ask SAP, a read-only assistant for SAP S/4HANA purchase orders.
+// General rules live here. What the data looks like (services, fields, RFC functions) is published by the
+// MCP server itself as "instructions", so adding a tool never requires editing this file.
+const BASE_SYSTEM = `You are Ask SAP, a read-only assistant for SAP S/4HANA.
 Never invent data: use only tool results.
-- Service API_PURCHASEORDER_PROCESS_SRV, entity sets A_PurchaseOrder and A_PurchaseOrderItem.
-- A_PurchaseOrder fields: PurchaseOrder, CompanyCode, Supplier, CreationDate, PurchaseOrderType, PurchasingGroup, PurchasingOrganization, DocumentCurrency.
-- A_PurchaseOrderItem fields: PurchaseOrder, PurchaseOrderItem, PurchaseOrderItemText, Plant, Material, OrderQuantity, NetPriceAmount.
-- Need other fields? Call get_metadata with service and entity first.
-- Always pass select (only needed fields). Use top 10 unless asked for more (max 50).
-- Filters are OData V2 with quoted strings: CompanyCode eq '2120'. Dates: CreationDate ge datetime'2012-01-01T00:00:00'.
-- On error or no rows, say so. You cannot change SAP data.
+- Choose the tool that fits the question: lists and filters of documents use the OData tools; one object by its key (for example one material) uses the matching get_* tool, if it is available.
+- On error or no rows, say so plainly and quote the SAP message if there is one. You cannot change SAP data.
 - Plain text only, no markdown tables or bold. Lists use "- ". Keep answers short.`
 
 /** Convert MCP tool definitions to the OpenAI/Groq "tools" format. */
@@ -37,7 +34,8 @@ const toolText = (result) =>
   (result.content || []).map((c) => c.text ?? '').join('\n').slice(0, MAX_TOOL_CHARS)
 
 export async function runAgent(message, history = []) {
-  const { client, tools } = await getMcp()
+  const { client, tools, instructions } = await getMcp()
+  const SYSTEM = instructions ? `${BASE_SYSTEM}\n\n${instructions}` : BASE_SYSTEM
   const groqTools = toGroqTools(tools)
   const trace = []
 
@@ -73,7 +71,7 @@ export async function runAgent(message, history = []) {
         const tool = tools.find((t) => t.name === name)
         if (!tool) throw new Error(`Unknown tool ${name}`)
         const args = coerceArgs(tool, JSON.parse(call.function.arguments || '{}'))
-        trace.push({ tool: name, args: JSON.stringify(args) })
+        trace.push({ tool: name, args: JSON.stringify(args), via: tool._meta?.via || '' })
         text = toolText(await client.callTool({ name, arguments: args }))
       } catch (e) {
         text = `Tool error: ${e.message}`

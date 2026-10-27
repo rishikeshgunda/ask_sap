@@ -5,7 +5,7 @@
 service ChatService {
 
   type Turn      { role : String; content : String; }
-  type ToolTrace { tool : String; args : String; }
+  type ToolTrace { tool : String; args : String; via : String; }
   type Answer    { reply : String; trace : many ToolTrace; }
 
   action ask(message : String, history : many Turn) returns Answer;

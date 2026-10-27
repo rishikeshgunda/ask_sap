@@ -25,7 +25,7 @@ sap.ui.define([
     return out.join("");
   }
 
-  // "query_entity_set" + {"top":5,...} -> readable lines
+  // "query_entity_set (OData)" + {"top":5,...} -> readable lines
   function formatCall(t) {
     let args;
     try {
@@ -33,7 +33,8 @@ sap.ui.define([
     } catch (e) {
       args = t.args;
     }
-    return t.tool + "\n" + args;
+    const via = { odata: "OData", rfc: "RFC" }[t.via];
+    return t.tool + (via ? " (" + via + ")" : "") + "\n" + args;
   }
 
   return Controller.extend("com.intraedge.asksap.controller.Chat", {

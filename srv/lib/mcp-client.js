@@ -23,10 +23,10 @@ async function connect() {
   client.onclose = () => { connecting = null }   // reconnect on next question if the child dies
   await client.connect(transport)
   const { tools } = await client.listTools()
-  return { client, tools }
+  return { client, tools, instructions: client.getInstructions() || '' }
 }
 
-/** Returns { client, tools }; starts the MCP server on first use. */
+/** Returns { client, tools, instructions }; starts the MCP server on first use. */
 export function getMcp() {
   if (!connecting) connecting = connect().catch((e) => { connecting = null; throw e })
   return connecting
