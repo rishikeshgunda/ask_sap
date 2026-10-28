@@ -21,7 +21,12 @@ async function connect() {
   })
   const client = new Client({ name: 'ask-sap-cap', version: '0.1.0' })
   client.onclose = () => { connecting = null }   // reconnect on next question if the child dies
-  await client.connect(transport)
+  try {
+    await client.connect(transport)
+  } catch (e) {
+    // The real reason (missing file, bad config...) is printed by the child process to the log (stderr: 'inherit').
+    throw new Error('The MCP server could not start. Look at the CAP log (cf logs ask-sap-poc-srv --recent) for the reason. [' + e.message + ']')
+  }
   const { tools } = await client.listTools()
   return { client, tools, instructions: client.getInstructions() || '' }
 }
